@@ -1,0 +1,133 @@
+
+
+select 
+	substring(kdunit,1,5) kodeUrusanProgram,
+	namaUrusanProgram=(select NMUNIT from DAFTUNIT df WHERE df.KDUNIT=substring(c.kdunit,1,5)),
+	substring(kdunit,1,5) kodeUrusanPelaksana, 
+	namaUrusanPelaksana=(select NMUNIT from DAFTUNIT df WHERE df.KDUNIT=substring(c.kdunit,1,5)),
+	substring(kdunit,6,2)+'00' kodeSKPD, 
+	c.NMUNIT namaSKPD,
+	'000' kodeProgram,'' namaProgram,
+	'000000' kodeKegiatan,'' namaKegiatan,
+	kodeFungsi=(select rtrim(replace(kdfung,'.','')) from fungsinit fi 
+					left join daftunit df on fi.unitkey=df.unitkey
+					left join fungsi f on fi.idfung=f.idfung
+							where df.KDUNIT=LEFT(c.KDUNIT,5)),
+	namaFungsi=(select nmfung from fungsinit fi left join daftunit df on fi.unitkey=df.unitkey
+					left join fungsi f on fi.idfung=f.idfung
+							where df.KDUNIT=LEFT(c.KDUNIT,5)),
+	substring(kdper,1,1) kodeAkunUtama,
+	namaAkunUtama=(select nmper from matangd m where m.kdper=substring(b.kdper,1,2)),
+	substring(kdper,3,1) kodeAkunKelompok,
+	namaAkunKelompok=(select nmper from matangd m where m.kdper=substring(b.kdper,1,4)),
+	substring(kdper,5,1) kodeAkunJenis,
+	namaAkunJenis=(select nmper from matangd m where m.kdper=substring(b.kdper,1,6)),
+	substring(kdper,7,2) kodeAkunObjek,
+	namaAkunObjek=(select nmper from matangd m where m.kdper=substring(b.kdper,1,9)),
+	substring(kdper,10,2) kodeAkunRincian,
+	nmper namaAkunRincian,
+	'' kodeAkunSub, '' namaAkunSub,
+	nilai nilaiAnggaran
+	from raskd a left join matangd b on a.mtgkey=b.mtgkey 
+left join daftunit c on a.unitkey=c.unitkey
+where kdtahap = '1' and kdlevel='3'
+union
+select substring(kdunit,1,5) kodeUrusanProgram,
+namaUrusanProgram=(select NMUNIT from DAFTUNIT df WHERE df.KDUNIT=substring(c.kdunit,1,5)),
+substring(kdunit,1,5) kodeUrusanPelaksana, 
+namaUrusanPelaksana=(select NMUNIT from DAFTUNIT df WHERE df.KDUNIT=substring(c.kdunit,1,5)),
+substring(kdunit,6,2)+'00' kodeSKPD, 
+c.NMUNIT namaSKPD,
+'000' kodeProgram,'' namaProgram,
+'000000' kodeKegiatan,'' namaKegiatan,
+kodeFungsi=(select rtrim(replace(kdfung,'.','')) from fungsinit fi 
+					left join daftunit df on fi.unitkey=df.unitkey
+					left join fungsi f on fi.idfung=f.idfung
+							where df.KDUNIT=LEFT(c.KDUNIT,5)),
+namaFungsi=(select nmfung from fungsinit fi left join daftunit df on fi.unitkey=df.unitkey
+					left join fungsi f on fi.idfung=f.idfung
+							where df.KDUNIT=LEFT(c.KDUNIT,5)),
+substring(kdper,1,1) kodeAkunUtama,
+namaAkunUtama=(select nmper from matangr m where m.kdper=substring(b.kdper,1,2)),
+substring(kdper,3,1) kodeAkunKelompok,
+namaAkunKelompok=(select nmper from matangr m where m.kdper=substring(b.kdper,1,4)),
+substring(kdper,5,1) kodeAkunJenis,
+namaAkunJenis=(select nmper from matangr m where m.kdper=substring(b.kdper,1,6)),
+substring(kdper,7,2) kodeAkunObjek,
+namaAkunObjek=(select nmper from matangr m where m.kdper=substring(b.kdper,1,9)),
+substring(kdper,10,2) kodeAkunRincian,
+nmper namaAkunRincian,
+'' kodeAkunSub, '' namaAkunSub,
+nilai nilaiAnggaran
+from raskrtl a left join matangr b on a.mtgkey=b.mtgkey 
+left join daftunit c on a.unitkey=c.unitkey
+where kdtahap = '1' and kdlevel='3'
+union
+select isnull(substring(f.kdunit,1,5),substring(c.kdunit,1,5)) kodeUrusanProgram,
+namaUrusanProgram=isnull((select NMUNIT from DAFTUNIT df WHERE df.KDUNIT=substring(f.kdunit,1,5)),
+					(select NMUNIT from DAFTUNIT df WHERE df.KDUNIT=substring(c.kdunit,1,5))),
+substring(c.kdunit,1,5) kodeUrusanPelaksana, 
+namaUrusanPelaksana=(select NMUNIT from DAFTUNIT df WHERE df.KDUNIT=substring(c.kdunit,1,5)),
+substring(c.kdunit,6,2)+'00' kodeSKPD, 
+c.NMUNIT namaSKPD,
+kodeProgram=(CASE WHEN LEN(RTRIM(REPLACE(e.NUPRGRM,'.','')))=3 THEN SUBSTRING(e.NUPRGRM,1,3)  
+				ELSE '0'+SUBSTRING(e.NUPRGRM,1,2) END),
+nmprgrm namaProgram,
+LEFT(RTRIM(REPLACE(d.NUKEG,'.','')) + '000000',6) kodeKegiatan,
+nmkegunit namaKegiatan,
+kodeFungsi=(select rtrim(replace(kdfung,'.','')) from fungsinit fi 
+					left join daftunit df on fi.unitkey=df.unitkey
+					left join fungsi fu on fi.idfung=fu.idfung
+							where df.KDUNIT=ISNULL(LEFT(f.KDUNIT,5),LEFT(C.KDUNIT,5))),
+namaFungsi=(select nmfung from fungsinit fi left join daftunit df on fi.unitkey=df.unitkey
+					left join fungsi fu on fi.idfung=fu.idfung
+							where df.KDUNIT=ISNULL(LEFT(f.KDUNIT,5),LEFT(C.KDUNIT,5))),
+substring(kdper,1,1) kodeAkunUtama,
+namaAkunUtama=(select nmper from matangr m where m.kdper=substring(b.kdper,1,2)),
+substring(kdper,3,1) kodeAkunKelompok,
+namaAkunKelompok=(select nmper from matangr m where m.kdper=substring(b.kdper,1,4)),
+substring(kdper,5,1) kodeAkunJenis,
+namaAkunJenis=(select nmper from matangr m where m.kdper=substring(b.kdper,1,6)),
+substring(kdper,7,2) kodeAkunObjek,
+namaAkunObjek=(select nmper from matangr m where m.kdper=substring(b.kdper,1,9)),
+substring(kdper,10,2) kodeAkunRincian,
+nmper namaAkunRincian,
+'' kodeAkunSub, '' namaAkunSub,
+nilai nilaiAnggaran
+from raskr a left join matangr b on a.mtgkey=b.mtgkey 
+left join daftunit c on a.unitkey=c.unitkey
+left join mkegiatan d on a.kdkegunit=d.kdkegunit
+left join mpgrm e on d.idprgrm=e.idprgrm
+left join daftunit f on e.unitkey=f.unitkey
+where kdtahap ='4' and c.kdlevel='3'
+union
+select substring(kdunit,1,5) kodeUrusanProgram,
+namaUrusanProgram=(select NMUNIT from DAFTUNIT df WHERE df.KDUNIT=substring(c.kdunit,1,5)),
+substring(kdunit,1,5) kodeUrusanPelaksana, 
+namaUrusanPelaksana=(select NMUNIT from DAFTUNIT df WHERE df.KDUNIT=substring(c.kdunit,1,5)),
+substring(kdunit,6,2)+'00' kodeSKPD, 
+c.NMUNIT namaSKPD,
+'000' kodeProgram,'' namaProgram,
+'000000' kodeKegiatan,'' namaKegiatan,
+kodeFungsi=(select rtrim(replace(kdfung,'.','')) from fungsinit fi 
+					left join daftunit df on fi.unitkey=df.unitkey
+					left join fungsi f on fi.idfung=f.idfung
+							where df.KDUNIT=LEFT(c.KDUNIT,5)),
+namaFungsi=(select nmfung from fungsinit fi left join daftunit df on fi.unitkey=df.unitkey
+					left join fungsi f on fi.idfung=f.idfung
+							where df.KDUNIT=LEFT(c.KDUNIT,5)),
+substring(kdper,1,1) kodeAkunUtama,
+namaAkunUtama=(select nmper from matangb m where m.kdper=substring(b.kdper,1,2)),
+substring(kdper,3,1) kodeAkunKelompok,
+namaAkunKelompok=(select nmper from matangb m where m.kdper=substring(b.kdper,1,4)),
+substring(kdper,5,1) kodeAkunJenis,
+namaAkunJenis=(select nmper from matangb m where m.kdper=substring(b.kdper,1,6)),
+substring(kdper,7,2) kodeAkunObjek,
+namaAkunObjek=(select nmper from matangb m where m.kdper=substring(b.kdper,1,9)),
+substring(kdper,10,2) kodeAkunRincian,
+nmper namaAkunRincian,
+'' kodeAkunSub, '' namaAkunSub,
+nilai nilaiAnggaran
+from raskb a left join matangb b on a.mtgkey=b.mtgkey 
+left join daftunit c on a.unitkey=c.unitkey
+where kdtahap = '1' and c.kdlevel='3'

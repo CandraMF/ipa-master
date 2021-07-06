@@ -1,0 +1,112 @@
+<?php
+	$qsts=$this->db->query("select if(tahapan=1,'Murni','Perubahan') as nmtahapan from dbsipd_".$_tahun.".__t_users where username='".$this->session->userdata('SESS_USERNAME')."'");	
+	$thprow = $qsts->row();	
+?>
+<script type="text/javascript">
+  setTimeout(function(){
+    location = ''
+  },60000)
+</script>
+
+<table class="table table-bordered table-striped with-check">
+  <thead>
+   <tr>			
+	  <th rowspan=3>Kode SKPD</th>
+	  <th rowspan=3>Nama SKPD</th>
+	  <th colspan='7'>Renstra</th>
+	  <th colspan='3'>Renja</th>
+	  <th rowspan='3'>Pagu APBD</th>
+   </tr>
+   <tr>
+	  <th rowspan=2>Jml Program</th>
+	  <th rowspan=2>Jml Kegiatan</th>
+	  <th colspan=5>Pagu</th>
+	  <th rowspan=2>Jml Program</th>
+	  <th rowspan=2>Jml Kegiatan</th>
+	  <th rowspan=2>Pagu</th>
+   </tr>	
+   <tr>
+	<th>Tahun 1</th>
+	<th>Tahun 2</th>
+	<th>Tahun 3</th>
+	<th>Tahun 4</th>
+	<th>Tahun 5</th>
+   </tr>
+  </thead>
+  <tbody>		   
+	<?php			
+	$i=1;
+	$valid="";
+		$NO=!EMPTY($NO)?$NO:0;
+		$JMAX=10;
+
+		$query="SELECT (COUNT(*)/".$JMAX.") AS cjml FROM dbsipd_".$_tahun.".mskpd WHERE KDSTUNIT='3'";
+		$srow=$this->m_action->ambilData($query);	
+		
+		$query="SELECT NOVIEW, MAXVIEW FROM dbsipd_".$_tahun.".jview";
+		$drow=$this->m_action->ambilData($query);
+
+		$cjml=INTVAL($srow->cjml);
+	
+		$MAXVIEW=INTVAL($drow->MAXVIEW);
+		$NOVIEW=INTVAL($drow->NOVIEW);
+		
+		$NOVIEW=$NOVIEW==1?0:$NOVIEW;
+	
+		
+		$Qry="SELECT TAHUN FROM dbsipd_".$_tahun.".t_renstra_dana WHERE PAGU>0 GROUP BY TAHUN ORDER BY TAHUN";
+		$query = $this->db->query($Qry);$i=1;$FieldQry="";
+		foreach ($query->result() as $row){
+			if(5>=$i){
+				$FieldQry.=", sum(if(TAHUN='".$row->TAHUN."',PAGU,0)) AS PAGU_".$i;
+			}
+			$i++;
+		}
+		
+	//// Rekening
+		$Qry="SELECT a.KDUNIT, a.NMUNIT, b.JMLRENST_PGRM, c.JMLRENST_KEG, d.PAGU_1, d.PAGU_2, d.PAGU_3, d.PAGU_4, d.PAGU_5, e.JMLRENJ_PRGRM, f.JMLRENJ_KEG, f.PAGU_RENJA, g.PAGU_SKPD FROM dbsipd_".$_tahun.".mskpd AS a 
+		LEFT JOIN (SELECT UNITKEY, COUNT(*) AS JMLRENST_PGRM FROM dbsipd_".$_tahun.".t_renstra_pgrm GROUP BY UNITKEY) AS b ON a.UNITKEY=b.UNITKEY
+		LEFT JOIN (SELECT UNITKEY, COUNT(*) as JMLRENST_KEG FROM dbsipd_".$_tahun.".t_renstra_keg GROUP BY UNITKEY) AS c ON a.UNITKEY=c.UNITKEY
+		LEFT JOIN (SELECT UNITKEY ".$FieldQry." FROM dbsipd_".$_tahun.".t_renstra_dana GROUP BY UNITKEY) AS d ON a.UNITKEY=d.UNITKEY
+		LEFT JOIN (SELECT a.UNITKEY, COUNT(*) AS JMLRENJ_PRGRM FROM (SELECT UNITKEY, KDPRGRM from dbsipd_".$_tahun.".t_kegiatan_keg GROUP BY UNITKEY, KDPRGRM) AS a GROUP BY a.UNITKEY) AS e ON a.UNITKEY=e.UNITKEY
+		LEFT JOIN (SELECT UNITKEY, COUNT(*) AS JMLRENJ_KEG, SUM(PAGU) AS PAGU_RENJA from dbsipd_".$_tahun.".t_kegiatan_keg GROUP BY UNITKEY) AS f ON a.UNITKEY=f.UNITKEY
+		LEFT JOIN (SELECT UNITKEY, PAGU AS PAGU_SKPD FROM dbsipd_".$_tahun.".t_pagu_skpd WHERE KDTAHAP='".$this->session->userdata('SESS_USERNAME')."') AS g ON a.UNITKEY=g.UNITKEY
+		WHERE a.KDSTUNIT='3'
+		ORDER BY a.KDUNIT  LIMIT  ".$NOVIEW.",".$JMAX;
+
+		if($cjml>=$MAXVIEW){	
+			$NO=$NOVIEW+$JMAX;
+			$MAXVIEW++;
+		}else{			
+			$NO=1;
+			$MAXVIEW=1;
+			
+		}
+
+		$this->db->query("UPDATE dbsipd_".$_tahun.".`jview` SET `NOVIEW`='".$NO."', `MAXVIEW`='".($MAXVIEW)."'");
+
+		$query = $this->db->query($Qry);
+		foreach ($query->result() as $row){
+				
+		echo "    
+		<tr>					
+			<td>".$row->KDUNIT."</td>
+			<td>".$row->NMUNIT."</td>
+			<td style='text-align:right;'>".$this->andri->cetakuang($row->JMLRENST_PGRM)."</td>
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->JMLRENST_KEG)."</td>
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->PAGU_1)."</td>
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->PAGU_2)."</td>
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->PAGU_3)."</td>
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->PAGU_4)."</td>
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->PAGU_5)."</td>		
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->JMLRENJ_PRGRM)."</td>
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->JMLRENJ_KEG)."</td>
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->PAGU_RENJA)."</td>
+			<td  style='text-align:right;'>".$this->andri->cetakuang($row->PAGU_SKPD)."</td>
+		</tr>
+		";
+		$i++;
+	}			
+	?>
+  </tbody>
+</table>
